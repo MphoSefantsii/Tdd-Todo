@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "fetch-mock": "^11.0.0",
     "jest-fetch-mock": "^3.0.3"
   }
 }

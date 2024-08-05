@@ -1,4 +1,4 @@
-import React from "react";
+import fetchMock from "fetch-mock";
 import {
   render,
   screen,
@@ -9,8 +9,14 @@ import mockData from "./data/mockData";
 import App from "./App";
 
 beforeEach(() => {
-  fetchMock.once([JSON.stringify(mockData)]);
+  fetchMock.restore();
+  fetchMock.once("*", JSON.stringify(mockData));
 });
+
+afterEach(() => {
+  fetchMock.restore();
+});
+
 describe("<App /> tests", () => {
   it("renders <App />", async () => {
     render(<App />);
@@ -19,6 +25,7 @@ describe("<App /> tests", () => {
 
   it("should add a todo item", async () => {
     fetchMock.once(
+      "*",
       JSON.stringify({
         userId: 3,
         id: Math.floor(Math.random() * 100) + 1,
