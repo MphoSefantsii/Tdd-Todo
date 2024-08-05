@@ -9,11 +9,8 @@ function App() {
   const [saving, setSaving] = useState(false);
 
   function onChange(e) {
-    setNewTodo(e.target.value);
-  }
-
-  function removeTodo(id) {
-    setTodos(todos.filter((t) => t.id !== id));
+    const value = e.target.value;
+    setNewTodo(value);
   }
 
   function addTodo(e) {
@@ -22,7 +19,7 @@ function App() {
       userId: 3,
       id: Math.floor(Math.random() * 10000) + 1,
       title: newTodo,
-      completed: false,
+      completed: false
     };
 
     setSaving(true);
@@ -30,52 +27,66 @@ function App() {
       method: "POST",
       body: JSON.stringify(value),
       headers: {
-        "Content-type": "application/json; charset=UTF-8",
-      },
+        "Content-type": "application/json; charset=UTF-8"
+      }
     })
-      .then((response) => response.json())
-      .then((result) => {
-        setTodos(todos.concat({ ...result, id: value.id }));
-        setSaving(false);
-      });
+        .then((response) => response.json())
+        .then((result) => {
+          setTodos(todos.concat({ ...result, id: value.id }));
+          setSaving(false);
+        });
+  }
+
+  function removeTodo(id) {
+    setTodos(todos.filter((t) => t.id !== id));
+  }
+
+  function updateTodo(id) {
+    const newList = todos.map((todoItem) => {
+      if (todoItem.id === id) {
+        const updatedItem = { ...todoItem, completed: !todoItem.completed };
+        return updatedItem;
+      }
+      return todoItem;
+    });
+    setTodos(newList);
   }
 
   useEffect(() => {
     async function fetchData() {
-      try {
-        const response = await fetch(
+      const result = await fetch(
           "https://jsonplaceholder.typicode.com/todos"
-        );
-        const result = await response.json();
-        setTodos(result.slice(0, 5));
-        setLoading(false);
-      } catch (error) {
-        console.error("Failed to fetch todos:", error);
-        setLoading(false);
-      }
+      ).then((response) => response.json());
+      setTodos(result.slice(0, 5));
+      setLoading(false);
     }
     fetchData();
   }, []);
 
   return (
-    <div className="App">
-      <h1 className="header">My todo list</h1>
-      {loading ? (
-        "Loading"
-      ) : (
-        <TodoList todos={todos} removeHandler={removeTodo} />
-      )}
-      <div className="add-todo-form">
-        {saving ? (
-          "Saving"
+      <div className="App">
+        <h1 className="header">My todo list</h1>
+        {loading ? (
+            "Loading"
         ) : (
-          <form onSubmit={addTodo}>
-            <input type="text" onChange={onChange} />
-            <button type="submit">Add new todo</button>
-          </form>
+            <TodoList
+                todos={todos}
+                removeHandler={removeTodo}
+                updateTodo={updateTodo}
+            />
         )}
+
+        <div className="add-todo-form">
+          {saving ? (
+              "Saving"
+          ) : (
+              <form onSubmit={addTodo}>
+                <input type="text" onChange={onChange} />
+                <button type="submit">Add new todo</button>
+              </form>
+          )}
+        </div>
       </div>
-    </div>
   );
 }
 
