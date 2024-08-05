@@ -1,50 +1,52 @@
-/* eslint-disable testing-library/no-unnecessary-act */
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
-import App from "./App";
-import mockData from "./data/mockData";
+import {
+  render,
+  screen,
+  waitForElementToBeRemoved,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import mockData from "./data/mockData";
+import App from "./App";
 
 beforeEach(() => {
-  global.fetch = jest.fn((url) => {
-    if (url === "https://jsonplaceholder.typicode.com/todos") {
-      return Promise.resolve({
-        json: () => Promise.resolve(mockData),
-      });
-    }
-    return Promise.resolve({
-      json: () =>
-        Promise.resolve({
-          userId: 3,
-          id: Math.floor(Math.random() * 10000) + 1,
-          title: "Do math homework",
-          completed: false,
-        }),
-    });
-  });
+  fetchMock.once([JSON.stringify(mockData)]);
 });
-
 describe("<App /> tests", () => {
-  it("should add a todo item", async () => {
+  it("renders <App />", async () => {
     render(<App />);
-    await waitFor(() => {
-      expect(screen.queryByText(/loading/i)).toBeNull();
-    });
+    await waitForElementToBeRemoved(() => screen.queryByText(/loading/i));
+  });
+
+  it("should add a todo item", async () => {
+    fetchMock.once(
+      JSON.stringify({
+        userId: 3,
+        id: Math.floor(Math.random() * 100) + 1,
+        title: "Do math homework",
+        completed: false,
+      })
+    );
+
+    render(<App />);
+    await waitForElementToBeRemoved(() => screen.queryByText(/loading/i));
+
     userEvent.type(screen.getByRole("textbox"), "Do math homework");
     userEvent.click(screen.getByText(/Add new todo/i));
-    await waitFor(() => {
-      expect(screen.queryByText(/saving/i)).toBeNull();
-    });
+    await waitForElementToBeRemoved(() => screen.queryByText(/saving/i));
     expect(screen.getByText(/Do math homework/i)).toBeInTheDocument();
   });
 
-  it("should remove a todo from the list", async () => {
+  it("remove todo from list", async () => {
     render(<App />);
-    await waitFor(() => expect(screen.queryByText(/loading/i)).toBeNull());
-    expect(screen.getByText(/Take out the trash/i)).toBeInTheDocument();
+    await waitForElementToBeRemoved(() => screen.queryByText(/loading/i));
     userEvent.click(screen.getByTestId("close-btn-3"));
-    await waitFor(() =>
-      expect(screen.queryByText(/Take out the trash/i)).toBeNull()
-    );
+    expect(screen.queryByText(/Take out the trash/i)).not.toBeInTheDocument();
+  });
+
+  it("todo item should be crossed out after completing", async () => {
+    render(<App />);
+    await waitForElementToBeRemoved(() => screen.queryByText(/loading/i));
+    userEvent.click(screen.getByTestId("checkbox-1"));
+    expect(screen.getByText(/eat breakfast/i)).toHaveClass("completed");
   });
 });
