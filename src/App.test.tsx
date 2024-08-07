@@ -1,3 +1,4 @@
+import React from "react";
 import fetchMock from "fetch-mock";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -6,7 +7,7 @@ import App from "./App";
 
 beforeEach(() => {
   fetchMock.restore();
-  fetchMock.get("*", JSON.stringify(mockData)); // Mock initial fetch
+  fetchMock.get("*", JSON.stringify(mockData)); 
 });
 
 afterEach(() => {
@@ -52,8 +53,6 @@ describe("<App /> tests", () => {
     );
 
     userEvent.click(screen.getByTestId("close-btn-3"));
-
-    // Ensure that the item is removed
     await waitFor(() =>
       expect(screen.queryByText(/Take out the trash/i)).not.toBeInTheDocument()
     );
@@ -66,8 +65,6 @@ describe("<App /> tests", () => {
     );
 
     userEvent.click(screen.getByTestId("checkbox-1"));
-
-    // Ensure that the item has the "completed" class
     expect(screen.getByText(/eat breakfast/i)).toHaveClass("completed");
   });
 });

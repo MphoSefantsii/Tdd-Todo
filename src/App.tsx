@@ -1,0 +1,95 @@
+import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
+import './App.css';
+import TodoList from '../components/TodoList';
+
+interface Todo {
+  userId: number;
+  id: string;
+  title: string;
+  completed: boolean;
+}
+
+function App() {
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [newTodo, setNewTodo] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  function editTodo(id: string, newTitle: string) {
+    setTodos(todos.map(todo => (todo.id === id ? { ...todo, title: newTitle } : todo)));
+  }
+
+  function addTodo(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const value: Todo = {
+      userId: 3,
+      id: Math.floor(Math.random() * 10000) + 1 + '',
+      title: newTodo,
+      completed: false
+    };
+
+    setSaving(true);
+    fetch('https://jsonplaceholder.typicode.com/todos', {
+      method: 'POST',
+      body: JSON.stringify(value),
+      headers: {
+        'Content-type': 'application/json; charset=UTF-8',
+      },
+    })
+      .then((response) => response.json())
+      .then((result) => {
+        setSaving(false);
+        setTodos(todos.concat({ ...result, id: value.id }));
+      });
+  }
+
+  function changeTodo(e: ChangeEvent<HTMLInputElement>) {
+    const value = e.currentTarget.value;
+    setNewTodo(value);
+  }
+
+  function removeTodo(id: string) {
+    setTodos(todos.filter(todo => todo.id !== id));
+  }
+
+  function updateTodo(id: string) {
+    const newList = todos.map(todoItem => {
+      if (todoItem.id === id) {
+        const updatedItem = { ...todoItem, completed: !todoItem.completed };
+        return updatedItem;
+      }
+      return todoItem;
+    });
+    setTodos(newList);
+  }
+
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      const result: Todo[] = await fetch(
+        "https://jsonplaceholder.typicode.com/todos"
+      ).then((response) => response.json());
+      setLoading(false);
+      setTodos(result.slice(0, 5));
+    }
+    fetchData();
+  }, []);
+
+  return (
+    <div className="App">
+      <h1 className='header'>My todo list</h1>
+      {loading ? "Loading" : <TodoList todos={todos} removeHandler={removeTodo} updateTodo={updateTodo} editTodo={editTodo} />}
+
+      <div className='add-todo-form'>
+        {saving ? "Saving" : (
+          <form onSubmit={addTodo}>
+            <input type="text" onChange={changeTodo} />
+            <button type='submit'>Add new todo</button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default App;
